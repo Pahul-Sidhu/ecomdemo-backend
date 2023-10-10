@@ -3,7 +3,7 @@ const app = express()
 const port = 8000
 const cors = require("cors");
 var admin = require("firebase-admin");
-var serviceAccount = require("serviceKey.json");
+var serviceAccount = require("./serviceKey.json");
 
 const corsOptions = {
     origin: "*",
