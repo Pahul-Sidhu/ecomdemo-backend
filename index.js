@@ -4,6 +4,7 @@ const port = 8000
 const cors = require("cors");
 var admin = require("firebase-admin");
 var serviceAccount = require("./serviceKey.json");
+var identifier = null;
 
 const corsOptions = {
     origin: "*",
@@ -25,8 +26,47 @@ var db = admin.firestore();
 app.get('/', (req, res) => res.send('Our backend is running!'))
 
 app.get('/userData', async (req, res) => {
-  console.log("hello")
-  res.json({ name: 'pahul' });
+  let data = {};
+  const usersRef = db.collection('users').doc(identifier);
+  const bought = usersRef.collection("Bought");
+  const cart = usersRef.collection("Cart");
+  const categories = usersRef.collection("Categories");
+  const details = usersRef.collection("Details");
+  const price = usersRef.collection("Price");
+  const search = usersRef.collection("Search");
+
+  if((await bought.doc("BuyDocument").get()).exists){
+    const boughtDoc = await bought.doc("BuyDocument").get();
+    data["bought"] = boughtDoc.data();
+  }
+
+  if((await cart.doc("CartDocument").get()).exists){
+    const cartDoc = await cart.doc("CartDocument").get();
+    data["cart"] = cartDoc.data();
+  }
+
+  if((await categories.doc("categoryDocument").get()).exists){
+    const categoriesDoc = await categories.doc("categoryDocument").get();
+    data["categories"] = categoriesDoc.data();
+  }
+
+  if((await details.doc("detailsDocument").get()).exists){
+    const detailsDoc = await details.doc("detailsDocument").get();
+    data["details"] = detailsDoc.data();
+  }
+
+  if((await price.doc("priceDocument").get()).exists){
+    const priceDoc = await price.doc("priceDocument").get();
+    data["price"] = priceDoc.data();
+  }
+
+  if((await search.doc("searchDocument").get()).exists){
+    const searchDoc = await search.doc("searchDocument").get();
+    data["search"] = searchDoc.data();
+  }
+
+  res.json(data);
+
 });
 
 app.post('/identify', (req, res) => {
@@ -135,6 +175,8 @@ const identify = async (fingerprint) => {
             });
       }
   });
+
+  identifier = fingerprint;
   
 };
 
