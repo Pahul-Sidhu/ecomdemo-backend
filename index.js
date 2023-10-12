@@ -3,18 +3,24 @@ const app = express()
 const port = 8000
 const cors = require("cors");
 var admin = require("firebase-admin");
-var serviceAccount = require("./serviceKey.json");
-var identifier = null;
-
+var serviceAccount = require("./key/serviceKey.json");
 const corsOptions = {
     origin: "*",
     credentials: true,
     optionSuccessStatus: 200,
 };
+
+const session = require('express-session');
   
 app.use(cors(corsOptions)); // CORS enabled on all routes
 app.use(express.json());
 app.use(express.urlencoded());
+app.use(session({
+  secret: 'ecomdemosecret',
+  resave: false,
+  saveUninitialized: true,
+  sameSite: 'true',
+}));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
@@ -26,8 +32,9 @@ var db = admin.firestore();
 app.get('/', (req, res) => res.send('Our backend is running!'))
 
 app.get('/userData', async (req, res) => {
+  // let identifier = req.query.id;
   let data = {};
-  const usersRef = db.collection('users').doc(identifier);
+  const usersRef = db.collection('users').doc(req.session.user.id);
   const bought = usersRef.collection("Bought");
   const cart = usersRef.collection("Cart");
   const categories = usersRef.collection("Categories");
@@ -65,12 +72,17 @@ app.get('/userData', async (req, res) => {
     data["search"] = searchDoc.data();
   }
 
-  res.json(data);
+  // res.json(data);
+  console.log(data);
+  res.json({status: req.session.user.id});
 
 });
 
 app.post('/identify', (req, res) => {
     identify(`${req.body.fp}`);
+    req.session.user = {
+      id: `${req.body.fp}`,
+    }
     res.json({status: 'success'});
 });
 
@@ -175,8 +187,6 @@ const identify = async (fingerprint) => {
             });
       }
   });
-
-  identifier = fingerprint;
   
 };
 
